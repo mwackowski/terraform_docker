@@ -23,13 +23,26 @@ resource "docker_image" "kafka-manager" {
   name = "hlebalbau/kafka-manager:stable"
 }
 
-resource "docker_container" "kafka" {
+resource "docker_container" "zookeeper_container" {
 
-  name  = "kafka"
+  name     = "zookeeper-1"
+  hostname = "zookeeper"
+  image    = "wurstmeister/zookeeper:latest"
+
+  ports {
+    external = 2181
+    internal = 2181
+  }
+
+  networks = [docker_network.kafkanet.id]
+}
+
+resource "docker_container" "kafka_container" {
+
+  name  = "kafka_container-1"
   image = "wurstmeister/kafka:latest"
 
-  networks = [docker_network.kafkanet.name]
-
+  networks = [docker_network.kafkanet.id]
   #   must_run = true
   #   publish_all_ports = true
   #   command = [
@@ -51,21 +64,6 @@ resource "docker_container" "kafka" {
   ]
 }
 
-resource "docker_container" "zookeeper_container" {
-
-  name = "zookeeper"
-
-  image = "wurstmeister/zookeeper:latest"
-
-  ports {
-    external = 2181
-    internal = 2181
-  }
-
-  networks = ["kafkanet"]
-}
-
-
 resource "docker_container" "kafka_manager" {
 
   name  = "kafka_manager"
@@ -83,12 +81,12 @@ resource "docker_container" "kafka_manager" {
 
   command = ["-Dpidfile.path=/dev/null"]
 
-  networks = [docker_network.kafkanet.name]
+  networks = [docker_network.kafkanet.id]
+
 }
 
 resource "docker_network" "kafkanet" {
   name   = "kafkanet"
   driver = "bridge"
+
 }
-
-
